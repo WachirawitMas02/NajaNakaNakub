@@ -17,8 +17,8 @@ import javax.swing.border.EmptyBorder;
 // One fixed slot in the joker row: either empty (dashed outline) or holding
 // a Joker (icon badge + name, with the full description as a tooltip).
 public class JokerSlotView extends JPanel {
-    private static final int SLOT_W = 84;
-    private static final int SLOT_H = 100;
+    private static final int SLOT_W = 129;
+    private static final int SLOT_H = 171;
     private static final int ARC = 12;
 
     private final boolean empty;

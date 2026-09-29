@@ -52,4 +52,17 @@ public class Card {
     public String toString() {
         return rank + " of " + suit;
     }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Card other = (Card) obj;
+        return this.rankValue == other.rankValue &&
+               this.suit != null && this.suit.equalsIgnoreCase(other.suit);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(suit != null ? suit.toLowerCase() : "", rankValue);
+    }
 }

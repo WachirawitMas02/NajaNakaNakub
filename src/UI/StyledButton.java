@@ -9,7 +9,8 @@ import javax.swing.JButton;
 public class StyledButton extends JButton {
     private boolean isHovered = false;
     private boolean isPressed = false;
-    private Color baseColor = new Color(254, 62, 59); // Default Balatro red
+    private Color baseColor = Theme.MULT_RED;
+    private static final int ARC = 6; // Crisp corner edge
 
     public StyledButton(String text) {
         super(text);
@@ -23,7 +24,7 @@ public class StyledButton extends JButton {
     }
 
     private void init() {
-        setFont(new Font("Impact", Font.PLAIN, 20));
+        setFont(Theme.FONT_BADGE);
         setForeground(Color.WHITE);
         setContentAreaFilled(false);
         setFocusPainted(false);
@@ -47,30 +48,29 @@ public class StyledButton extends JButton {
         int h = getHeight();
         int pressOffset = isPressed ? 4 : (isHovered ? -1 : 0);
 
-        // 3D Shadow layer
+        // Bevel base
         g2d.setColor(baseColor.darker().darker());
-        g2d.fill(new RoundRectangle2D.Double(0, 6, w, h - 6, 16, 16));
+        g2d.fill(new RoundRectangle2D.Double(0, 5, w, h - 5, ARC, ARC));
 
-        // Button Face
+        // Face
         Color fill = isHovered ? baseColor.brighter() : baseColor;
         g2d.setColor(fill);
-        g2d.fill(new RoundRectangle2D.Double(0, pressOffset, w, h - 6, 16, 16));
+        g2d.fill(new RoundRectangle2D.Double(0, pressOffset, w, h - 5, ARC, ARC));
 
-        // Highlight rim
-        g2d.setColor(new Color(255, 255, 255, 60));
-        g2d.setStroke(new BasicStroke(2f));
-        g2d.draw(new RoundRectangle2D.Double(1, pressOffset + 1, w - 2, h - 8, 14, 14));
+        // Thin rim
+        g2d.setColor(new Color(255, 255, 255, 45));
+        g2d.setStroke(new BasicStroke(1.5f));
+        g2d.draw(new RoundRectangle2D.Double(0, pressOffset, w - 1, h - 6, ARC, ARC));
 
         // Label
         FontMetrics fm = g2d.getFontMetrics();
         int tx = (w - fm.stringWidth(getText())) / 2;
-        int ty = ((h - 6) + fm.getAscent() - fm.getDescent()) / 2 + pressOffset;
+        int ty = ((h - 5) + fm.getAscent() - fm.getDescent()) / 2 + pressOffset;
 
-        // Text Drop shadow
+        // Shadow & text
         g2d.setColor(new Color(0, 0, 0, 160));
-        g2d.drawString(getText(), tx + 1, ty + 2);
+        g2d.drawString(getText(), tx + 1, ty + 1);
 
-        // Main text
         g2d.setColor(Color.WHITE);
         g2d.drawString(getText(), tx, ty);
 

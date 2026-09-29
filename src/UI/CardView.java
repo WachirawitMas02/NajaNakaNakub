@@ -1,64 +1,56 @@
 package UI;
 
-import Audio.SoundManager;
 import GameModel.Card;
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.util.function.Consumer;
 import javax.swing.JPanel;
-import javax.swing.Timer;
 
-// A single playing card, entirely hand-drawn (no image assets). Supports a
-// smooth selection lift, a hover glow, a staggered "deal in" entrance
-// animation, and a pop-and-fade exit animation used when a hand is played.
 public class CardView extends JPanel {
-    private static final int WIDTH = 78;
-    private static final int HEIGHT = 108;
-    private static final int TOP_PAD = 60;
+    public static final int CARD_W = 129;
+    public static final int CARD_H = 171;
+    public static final int FULL_H = 480; // Headroom for center table flight
+    private static final int ARC = 12;
 
     private final Card card;
-    private boolean selected;
-    private boolean hovering;
+    private final Consumer<Card> onClick;
 
-    private float liftOffset = 0f;
+    private boolean isSelected = false;
+    private boolean isHovered = false;
+
+    // Transformation variables
+    private float offsetY = 0f;
+    private float offsetX = 0f;
+    private float rotationDeg = 0f;
     private float scale = 1f;
     private float alpha = 1f;
-    private boolean scoringGlow;
-    private String popupText;
-    private float popupAlpha;
-    private float popupOffsetY;
 
-    private Timer activeAnim;
+    // Score Popup
+    private String floatingText = null;
+    private float floatY = 0f;
+    private float floatAlpha = 0f;
 
     public CardView(Card card, Consumer<Card> onClick) {
         this.card = card;
-        setPreferredSize(new Dimension(WIDTH + 10, HEIGHT + TOP_PAD));
+        this.onClick = onClick;
+        setPreferredSize(new Dimension(CARD_W, FULL_H));
         setOpaque(false);
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                SoundManager.playClick();
-                onClick.accept(card);
-            }
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
+        addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
-                hovering = true;
-                repaint();
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                isHovered = true;
+                if (!isSelected) animateLift(-8f);
             }
-
             @Override
-            public void mouseExited(MouseEvent e) {
-                hovering = false;
-                repaint();
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                isHovered = false;
+                if (!isSelected) animateLift(0f);
+            }
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (onClick != null) onClick.accept(card);
             }
         });
     }
@@ -68,179 +60,198 @@ public class CardView extends JPanel {
     }
 
     public void setSelected(boolean selected) {
-        if (this.selected == selected) {
-            return;
-        }
-        this.selected = selected;
-        animateLiftTo(selected ? -22f : 0f);
+        this.isSelected = selected;
+        animateLift(selected ? -24f : (isHovered ? -8f : 0f));
+    }
+    // เพิ่มเมธอดนี้ใน UI/CardView.java เพื่อให้เช็คสถานะการเลือกได้โดยตรง ไม่ต้องพึ่ง equals() ของ Card
+    public boolean isCardSelected() {
+        return isSelected;
     }
 
-    // Sets selection state without animating - used right after a fresh
-    // CardView is created (e.g. on rebuild after a sort) so it starts in
-    // sync with the model instead of momentarily looking deselected.
     public void setSelectedImmediate(boolean selected) {
-        this.selected = selected;
+        this.isSelected = selected;
+        this.offsetY = selected ? -24f : 0f;
+        repaint();
     }
 
-    private void animateLiftTo(float target) {
-        stopActiveAnim();
-        float start = liftOffset;
-        activeAnim = Animator.animate(140, t -> {
-            liftOffset = start + (target - start) * t;
+    private void animateLift(float targetY) {
+        float startY = this.offsetY;
+        Animator.animate(140, t -> {
+            offsetY = startY + (targetY - startY) * t;
+            if (getParent() != null) {
+                getParent().repaint();
+            }
             repaint();
         }, null);
     }
 
-    // Cards start below the hand, faded out and slightly small, then rise
-    // into place. delayMs staggers each card in the hand for a dealt effect.
-    public void playDealAnimation(int delayMs) {
-        scale = 0.6f;
-        alpha = 0f;
-        liftOffset = 46f;
-        Timer delay = new Timer(delayMs, null);
-        delay.setRepeats(false);
-        delay.addActionListener(e -> {
-            float targetLift = selected ? -22f : 0f;
-            float startLift = liftOffset;
-            activeAnim = Animator.animate(280, t -> {
-                scale = 0.6f + 0.4f * t;
-                alpha = t;
-                liftOffset = startLift + (targetLift - startLift) * t;
-                repaint();
-            }, null);
-        });
-        delay.start();
-    }
-
-    // Used when a played card leaves the hand: a quick pop + fade, then
-    // invokes onDone so the caller can safely mutate game state afterward.
-    public void animateExit(Runnable onDone) {
-        stopActiveAnim();
-        float startLift = liftOffset;
-        activeAnim = Animator.animate(200, t -> {
-            scale = 1f + 0.2f * t;
-            alpha = 1f - t;
-            liftOffset = startLift - 26f * t;
+    // 1. Move to Center Table (Travels from bottom hand area to felt center)
+    public void animatePlayToCenter(Runnable onDone) {
+        float startY = this.offsetY;
+        // Travel -170px up (stays safely within 480px canvas without breaching top border)
+        Animator.animate(260, t -> {
+            offsetY = startY + (-170f - startY) * t;
+            scale = 1f + 0.08f * (float) Math.sin(t * Math.PI);
+            if (getParent() != null) {
+                getParent().repaint();
+                if (getParent().getParent() != null) {
+                    getParent().getParent().repaint();
+                }
+            }
             repaint();
         }, onDone);
     }
 
-    // Played during the scoring sequence when this card contributes its
-    // chip value: a quick pulse/bounce with a floating "+N" that rises and
-    // fades, so "this card added chips" reads clearly on screen.
-    public void pulseScore(String label) {
-        stopActiveAnim();
-        scoringGlow = true;
-        popupText = label;
-        popupAlpha = 1f;
-        popupOffsetY = 0f;
-        float baseLift = liftOffset;
-        activeAnim = Animator.animate(420, t -> {
-            scale = 1f + 0.18f * (float) Math.sin(t * Math.PI);
-            liftOffset = baseLift - 6f * (float) Math.sin(t * Math.PI);
-            popupAlpha = 1f - t;
-            popupOffsetY = -26f * t;
+    // 2. Pulse when card scores (+Chips tag)
+    public void pulseScore(String text) {
+        this.floatingText = text;
+        this.floatY = 0f;
+        this.floatAlpha = 1f;
+
+        Animator.animate(200, t -> {
+            scale = 1.08f + 0.16f * (1f - t);
+            repaint();
+        }, () -> scale = 1.08f);
+
+        Animator.animate(380, t -> {
+            floatY = -35f * t;
+            floatAlpha = 1f - t;
             repaint();
         }, () -> {
-            scale = 1f;
-            liftOffset = baseLift;
-            scoringGlow = false;
-            popupText = null;
+            floatingText = null;
             repaint();
         });
     }
 
-    private void stopActiveAnim() {
-        if (activeAnim != null) {
-            activeAnim.stop();
+    // 3. Exit table after scoring completes (Flies up past top edge)
+    public void animateScoreExit(Runnable onDone) {
+        float startY = this.offsetY;
+        Animator.animate(220, t -> {
+            offsetY = startY - 140f * t;
+            alpha = Math.max(0f, 1f - t);
+            repaint();
+        }, onDone);
+    }
+
+    // 4. Discard Toss (Tumbles down off table)
+    public void animateDiscardToss(float directionRandomness, Runnable onDone) {
+        float startY = this.offsetY;
+        Animator.animate(260, t -> {
+            offsetY = startY + 180f * t;
+            offsetX = directionRandomness * 80f * t;
+            rotationDeg = directionRandomness * 35f * t;
+            scale = Math.max(0.2f, 1f - 0.4f * t);
+            alpha = Math.max(0f, 1f - t * 1.2f);
+            repaint();
+        }, onDone);
+    }
+
+    // 5. Deal In (Enters smoothly from bottom)
+    public void playDealAnimation(int delayMs) {
+        this.offsetY = 80f;
+        this.alpha = 0f;
+        this.scale = 0.88f;
+        this.rotationDeg = 0f;
+        this.offsetX = 0f;
+
+        if (delayMs > 0) {
+            Animator.animate(delayMs, t -> {}, this::runDealEntrance);
+        } else {
+            runDealEntrance();
         }
     }
 
-    private boolean isRed() {
-        return "Hearts".equals(card.getSuit()) || "Diamonds".equals(card.getSuit());
-    }
-
-    private String suitSymbol() {
-        switch (card.getSuit()) {
-            case "Hearts": return "♥";
-            case "Diamonds": return "♦";
-            case "Clubs": return "♣";
-            case "Spades": return "♠";
-            default: return "?";
-        }
-    }
-
-    private String rankLabel() {
-        switch (card.getRank()) {
-            case "Jack": return "J";
-            case "Queen": return "Q";
-            case "King": return "K";
-            case "Ace": return "A";
-            default: return card.getRank();
-        }
+    private void runDealEntrance() {
+        Animator.animate(240, t -> {
+            offsetY = 80f * (1f - t);
+            alpha = t;
+            scale = 0.88f + 0.12f * t;
+            repaint();
+        }, () -> {
+            offsetY = 0f;
+            alpha = 1f;
+            scale = 1f;
+            repaint();
+        });
     }
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+        if (alpha <= 0.01f) return;
+
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int cx = (WIDTH + 10) / 2;
-        int topY = TOP_PAD + (int) liftOffset;
+        int w = getWidth();
+        // Rest near bottom with 12px cushion
+        int baseBottomY = getHeight() - CARD_H - 12;
 
-        g2.translate(cx, topY + HEIGHT / 2f);
+        AffineTransform oldTx = g2.getTransform();
+        g2.translate(w / 2.0 + offsetX, baseBottomY + CARD_H / 2.0 + offsetY);
+        g2.rotate(Math.toRadians(rotationDeg));
         g2.scale(scale, scale);
-        g2.translate(-cx, -(topY + HEIGHT / 2f));
+        g2.translate(-CARD_W / 2.0, -CARD_H / 2.0);
 
-        Composite oldComposite = g2.getComposite();
         if (alpha < 1f) {
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, alpha)));
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         }
-
-        int arc = 14;
-        int x = 4;
-        int w = WIDTH - 8;
 
         // Drop shadow
-        g2.setColor(new Color(0, 0, 0, 90));
-        g2.fillRoundRect(x + 2, topY + 4, w, HEIGHT, arc, arc);
+        g2.setColor(new Color(0, 0, 0, 80));
+        g2.fillRoundRect(3, 5, CARD_W - 6, CARD_H - 6, ARC, ARC);
 
-        // Glow ring while selected, hovered, or actively contributing to a score
-        if (scoringGlow) {
-            g2.setColor(Theme.CHIP_BLUE);
-            g2.fillRoundRect(x - 4, topY - 4, w + 8, HEIGHT + 8, arc + 4, arc + 4);
-        } else if (selected || hovering) {
-            g2.setColor(selected ? Theme.GOLD : new Color(255, 255, 255, 120));
-            g2.fillRoundRect(x - 3, topY - 3, w + 6, HEIGHT + 6, arc + 3, arc + 3);
-        }
+        // Face
+        g2.setColor(new Color(248, 249, 252));
+        g2.fillRoundRect(0, 0, CARD_W - 1, CARD_H - 1, ARC, ARC);
 
-        g2.setColor(Color.WHITE);
-        g2.fillRoundRect(x, topY, w, HEIGHT, arc, arc);
-        g2.setColor(new Color(0xD8D8E8));
-        g2.drawRoundRect(x, topY, w, HEIGHT, arc, arc);
+        // Border
+        g2.setColor(isSelected ? Theme.GOLD : new Color(180, 185, 200));
+        g2.setStroke(new BasicStroke(isSelected ? 3.5f : 1.8f));
+        g2.drawRoundRect(0, 0, CARD_W - 1, CARD_H - 1, ARC, ARC);
 
-        Color suitColor = isRed() ? Theme.SUIT_RED : Theme.SUIT_BLACK;
+        // Suit & Rank strings (scaled for 1.5x)
+        String s = card.getSuit().toLowerCase();
+        boolean isRed = s.contains("heart") || s.contains("diamond");
+        Color suitColor = isRed ? Theme.SUIT_RED : Theme.SUIT_BLACK;
         g2.setColor(suitColor);
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        g2.drawString(rankLabel(), x + 8, topY + 22);
 
-        g2.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 32));
-        String suit = suitSymbol();
-        int textWidth = g2.getFontMetrics().stringWidth(suit);
-        g2.drawString(suit, x + (w - textWidth) / 2, topY + HEIGHT / 2 + 16);
+        String suitSymbol = s.contains("heart") ? "♥" : (s.contains("diamond") ? "♦" : (s.contains("club") ? "♣" : "♠"));
+        String r = card.getRank();
+        String rankLabel;
+        if (r.equalsIgnoreCase("Ace")) rankLabel = "A";
+        else if (r.equalsIgnoreCase("King")) rankLabel = "K";
+        else if (r.equalsIgnoreCase("Queen")) rankLabel = "Q";
+        else if (r.equalsIgnoreCase("Jack")) rankLabel = "J";
+        else rankLabel = r;
 
-        if (popupText != null) {
-            Composite before = g2.getComposite();
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, popupAlpha)));
+        // Scaled typography
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        g2.drawString(rankLabel, 9, 28);
+
+        g2.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 24));
+        g2.drawString(suitSymbol, 9, 52);
+
+        g2.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 52));
+        FontMetrics fm = g2.getFontMetrics();
+        int symW = fm.stringWidth(suitSymbol);
+        g2.drawString(suitSymbol, (CARD_W - symW) / 2, CARD_H / 2 + 18);
+
+        g2.setTransform(oldTx);
+
+        // Floating score tag
+        if (floatingText != null && floatAlpha > 0.05f) {
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, floatAlpha));
+            g2.setFont(Theme.FONT_BADGE);
+            FontMetrics tfm = g2.getFontMetrics();
+            int tw = tfm.stringWidth(floatingText);
+            int bx = (w - tw) / 2 - 8;
+            int by = (int) (baseBottomY + offsetY + floatY);
             g2.setColor(Theme.CHIP_BLUE);
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 18));
-            int tw = g2.getFontMetrics().stringWidth(popupText);
-            g2.drawString(popupText, x + (w - tw) / 2, topY + (int) popupOffsetY - 6);
-            g2.setComposite(before);
+            g2.fillRoundRect(bx, by, tw + 16, tfm.getHeight() + 4, 6, 6);
+            g2.setColor(Color.WHITE);
+            g2.drawString(floatingText, bx + 8, by + tfm.getAscent());
         }
 
-        g2.setComposite(oldComposite);
         g2.dispose();
     }
 }

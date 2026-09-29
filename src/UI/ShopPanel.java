@@ -87,7 +87,7 @@ public class ShopPanel extends BackdropPanel {
             textStack.add(name);
 
             JLabel desc = new JLabel("<html><center>" + joker.getDescription() + "</center></html>", SwingConstants.CENTER);
-            desc.setFont(Theme.BODY_FONT);
+            desc.setFont(Theme.TITLE_FONT);
             desc.setForeground(Theme.TEXT);
             desc.setAlignmentX(CENTER_ALIGNMENT);
             textStack.add(javax.swing.Box.createVerticalStrut(6));
