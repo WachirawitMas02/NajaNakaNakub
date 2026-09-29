@@ -65,6 +65,7 @@ public class CardView extends JPanel {
     }
     // เพิ่มเมธอดนี้ใน UI/CardView.java เพื่อให้เช็คสถานะการเลือกได้โดยตรง ไม่ต้องพึ่ง equals() ของ Card
     public boolean isCardSelected() {
+        Audio.SoundManager.playCardTick();
         return isSelected;
     }
 

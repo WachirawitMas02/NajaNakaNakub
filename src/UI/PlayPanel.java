@@ -420,6 +420,7 @@ public class PlayPanel extends BackdropPanel {
         for (ScoreEvent event : result.getEvents()) {
             steps.add(() -> {
                 if (event.getType() == ScoreEvent.Type.CARD && event.getCard() != null) {
+                    Audio.SoundManager.playCombineHit();
                     for (CardView cv : playedViews) {
                         // เปรียบเทียบ rank และ suit ตรงๆ ป้องกัน equals() ทำงานพลาด
                         if (cv.getCard().getRank().equals(event.getCard().getRank()) &&
@@ -431,6 +432,7 @@ public class PlayPanel extends BackdropPanel {
                 } else if (event.getType() == ScoreEvent.Type.JOKER && event.getJoker() != null) {
                     int idx = state.getJokers().indexOf(event.getJoker());
                     if (idx >= 0 && idx < activeJokerSlots.size()) {
+                        Audio.SoundManager.playJokerActivate();
                         activeJokerSlots.get(idx).pulseActivate();
                     }
                 }
@@ -477,6 +479,8 @@ public class PlayPanel extends BackdropPanel {
         float dir = -0.6f;
         for (CardView cv : activeCardViews) {
             if (discarding.contains(cv.getCard())) {
+                Audio.SoundManager.playCardTick();
+                
                 cv.animateDiscardToss(dir, null);
                 dir += 0.4f; // ไพ่แต่ละใบจะกระเด็นกระจายทิศทางกันอย่างเป็นธรรมชาติ
             }
