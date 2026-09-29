@@ -3,37 +3,28 @@ package UI;
 import Modifiers.Hero;
 import Modifiers.HeroFactory;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.*;
 
-public class MenuPanel extends JPanel {
+public class MenuPanel extends BackdropPanel {
 
     private final Consumer<Hero> onHeroSelected;
     private final List<Hero> heroes;
     private int currentIndex = 0;
-
-    // Display components
-    private final JLabel heroNameLabel;
-    private final JLabel heroTaglineLabel;
-    private final JTextArea heroAbilityArea;
     private final HeroCardView cardPreview;
 
     public MenuPanel(Consumer<Hero> onHeroSelected) {
         this.onHeroSelected = onHeroSelected;
-        // เรียกใช้เมธอดตรงตาม HeroFactory.java
         this.heroes = HeroFactory.createChoices();
 
         setLayout(new BorderLayout());
-        setOpaque(false);
 
         // Header Title
         JLabel titleLabel = new JLabel("CHOOSE YOUR HERO", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Impact", Font.PLAIN, 42));
+        titleLabel.setFont(new Font("Impact", Font.PLAIN, 56));
         titleLabel.setForeground(new Color(255, 230, 90));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(25, 0, 10, 0));
         add(titleLabel, BorderLayout.NORTH);
 
         // Center Area: Balatro Carousel (<  [ CARD ]  >)
@@ -41,65 +32,33 @@ public class MenuPanel extends JPanel {
         carouselPanel.setOpaque(false);
 
         JButton prevBtn = new StyledButton("<");
-        prevBtn.setPreferredSize(new Dimension(60, 60));
-        prevBtn.setFont(new Font("SansSerif", Font.BOLD, 26));
+        prevBtn.setPreferredSize(new Dimension(55, 55));
+        prevBtn.setFont(new Font("SansSerif", Font.BOLD, 24));
         prevBtn.addActionListener(e -> cycle(-1));
 
         JButton nextBtn = new StyledButton(">");
-        nextBtn.setPreferredSize(new Dimension(60, 60));
-        nextBtn.setFont(new Font("SansSerif", Font.BOLD, 26));
+        nextBtn.setPreferredSize(new Dimension(55, 55));
+        nextBtn.setFont(new Font("SansSerif", Font.BOLD, 24));
         nextBtn.addActionListener(e -> cycle(1));
 
-        // กล่องแสดงการ์ด Hero
-        cardPreview = new HeroCardView();
-        cardPreview.setPreferredSize(new Dimension(320, 440));
-        cardPreview.setLayout(new BoxLayout(cardPreview, BoxLayout.Y_AXIS));
+        // Use the external UI/HeroCardView.java component directly
+        Hero initialHero = (heroes != null && !heroes.isEmpty()) ? heroes.get(0) : null;
+        cardPreview = new HeroCardView(initialHero, null);
 
-        heroNameLabel = new JLabel("", SwingConstants.CENTER);
-        heroNameLabel.setFont(new Font("Impact", Font.PLAIN, 30));
-        heroNameLabel.setForeground(Color.WHITE);
-        heroNameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        heroTaglineLabel = new JLabel("", SwingConstants.CENTER);
-        heroTaglineLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
-        heroTaglineLabel.setForeground(new Color(255, 215, 0));
-        heroTaglineLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        heroAbilityArea = new JTextArea();
-        heroAbilityArea.setWrapStyleWord(true);
-        heroAbilityArea.setLineWrap(true);
-        heroAbilityArea.setEditable(false);
-        heroAbilityArea.setFocusable(false);
-        heroAbilityArea.setOpaque(false);
-        heroAbilityArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        heroAbilityArea.setForeground(new Color(240, 240, 240));
-        heroAbilityArea.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-        heroAbilityArea.setMaximumSize(new Dimension(280, 160));
-        heroAbilityArea.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        cardPreview.add(Box.createVerticalStrut(30));
-        cardPreview.add(heroNameLabel);
-        cardPreview.add(Box.createVerticalStrut(6));
-        cardPreview.add(heroTaglineLabel);
-        cardPreview.add(Box.createVerticalStrut(25));
-        cardPreview.add(heroAbilityArea);
-        cardPreview.add(Box.createVerticalGlue());
-
-        // ประกอบร่าง Carousel
         carouselPanel.add(prevBtn);
-        carouselPanel.add(Box.createHorizontalStrut(35));
+        carouselPanel.add(Box.createHorizontalStrut(32));
         carouselPanel.add(cardPreview);
-        carouselPanel.add(Box.createHorizontalStrut(35));
+        carouselPanel.add(Box.createHorizontalStrut(32));
         carouselPanel.add(nextBtn);
 
         add(carouselPanel, BorderLayout.CENTER);
 
-        // ปุ่มยืนยันด้านล่าง
-        JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 30));
+        // Bottom confirmation button
+        JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 25));
         bottomBar.setOpaque(false);
 
         StyledButton selectButton = new StyledButton("START RUN WITH HERO");
-        selectButton.setPreferredSize(new Dimension(280, 54));
+        selectButton.setPreferredSize(new Dimension(290, 52));
         selectButton.setFont(new Font("Impact", Font.PLAIN, 22));
         selectButton.addActionListener(e -> selectCurrentHero());
 
@@ -118,29 +77,8 @@ public class MenuPanel extends JPanel {
     private void updateDisplay() {
         if (heroes == null || heroes.isEmpty()) return;
         Hero hero = heroes.get(currentIndex);
-
-        // ดึงค่าตาม getter ของ Hero.java (หากชื่อ getter ต่างจากนี้ให้ปรับตาม field ใน Hero)
-        try {
-            heroNameLabel.setText(hero.getName().toUpperCase());
-        } catch (Exception e) {
-            heroNameLabel.setText("HERO");
-        }
-
-        try {
-            // ดึงฉายา (Tagline / Title)
-            heroTaglineLabel.setText(hero.getDescription());
-        } catch (Exception e) {
-            heroTaglineLabel.setText("HERO ARCHETYPE");
-        }
-
-        try {
-            // ดึงข้อความ Ability / Description
-            heroAbilityArea.setText(hero.getDescription());
-        } catch (Exception e) {
-            heroAbilityArea.setText("");
-        }
-
-        cardPreview.repaint();
+        // Pass the chosen hero instance to update portrait and text together
+        cardPreview.setHero(hero);
     }
 
     private void selectCurrentHero() {
@@ -149,49 +87,31 @@ public class MenuPanel extends JPanel {
         onHeroSelected.accept(chosen);
     }
 
-    // กล่องการ์ดสไตล์ Balatro พร้อมแอนิเมชันลอยตัว (Floating Card Effect)
-    private class HeroCardView extends JPanel {
-        private float floatAngle = 0f;
+    @Override
+    protected void paintChildren(Graphics g) {
+        super.paintChildren(g);
 
-        public HeroCardView() {
-            setOpaque(false);
-            Timer timer = new Timer(20, (ActionEvent e) -> {
-                floatAngle += 0.05f;
-                repaint();
-            });
-            timer.start();
+        Graphics2D g2 = (Graphics2D) g.create();
+        int w = getWidth();
+        int h = getHeight();
+
+        // Scanlines across entire menu
+        g2.setColor(new Color(0, 0, 0, 24));
+        for (int y = 0; y < h; y += 3) {
+            g2.drawLine(0, y, w, y);
         }
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // Curved tube vignette
+        java.awt.geom.Point2D center = new java.awt.geom.Point2D.Float(w / 2f, h / 2f);
+        float radius = (float) Math.hypot(w / 2.0, h / 2.0);
+        RadialGradientPaint glassVignette = new RadialGradientPaint(
+            center, radius,
+            new float[]{0.0f, 0.70f, 1.0f},
+            new Color[]{new Color(0, 0, 0, 0), new Color(0, 0, 0, 35), new Color(0, 0, 0, 150)}
+        );
+        g2.setPaint(glassVignette);
+        g2.fillRect(0, 0, w, h);
 
-            int w = getWidth();
-            int h = getHeight();
-            int offsetY = (int) (Math.sin(floatAngle) * 4);
-
-            // Card Shadow
-            g2d.setColor(new Color(10, 12, 16, 180));
-            g2d.fill(new RoundRectangle2D.Double(8, 12 + offsetY, w - 16, h - 20, 24, 24));
-
-            // Card Body (Slate Background)
-            g2d.setColor(new Color(36, 42, 54));
-            g2d.fill(new RoundRectangle2D.Double(6, 6 + offsetY, w - 12, h - 20, 24, 24));
-
-            // Balatro Red Border
-            g2d.setColor(new Color(255, 68, 68));
-            g2d.setStroke(new BasicStroke(3.5f));
-            g2d.draw(new RoundRectangle2D.Double(6, 6 + offsetY, w - 12, h - 20, 24, 24));
-
-            // CRT Scanlines บนตัวการ์ด
-            g2d.setColor(new Color(0, 0, 0, 30));
-            for (int y = 6 + offsetY; y < h - 14 + offsetY; y += 4) {
-                g2d.drawLine(10, y, w - 10, y);
-            }
-
-            g2d.dispose();
-        }
+        g2.dispose();
     }
 }

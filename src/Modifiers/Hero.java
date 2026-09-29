@@ -29,7 +29,7 @@ public class Hero implements Modifier {
         this.title = title;
         this.description = description;
         this.effect = effect;
-        this.IMGpath = "/assets/heroes/" + name.toLowerCase().replace(" ", "_")+ ".png";
+        this.IMGpath = "/Assets/Heroes/" + name.toLowerCase().replace(" ", "_")+ ".png";
     }
 
     @Override
@@ -41,10 +41,21 @@ public class Hero implements Modifier {
     public String getDescription() {
         return description;
     }
+    
+    public String getTitle(){
+        return title;
+    }
+    public String getNName(){
+        return name;
+    }
 
     @Override
     public double modifyMult(double currentMult, Hand hand, PokerHandType handType) {
         return effect.apply(currentMult, hand, handType);
+    }
+    
+    public String getimgpath(){
+        return IMGpath;
     }
 
     @Override

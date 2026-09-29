@@ -3,6 +3,7 @@ package UI;
 import Modifiers.Joker;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -14,12 +15,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
-// One fixed slot in the joker row: either empty (dashed outline) or holding
-// a Joker (icon badge + name, with the full description as a tooltip).
 public class JokerSlotView extends JPanel {
     private static final int SLOT_W = 129;
     private static final int SLOT_H = 171;
-    private static final int ARC = 12;
+    private static final int ARC = 8; // Small round edge matching the new theme
 
     private final boolean empty;
     private float glowAlpha = 0f;
@@ -54,8 +53,6 @@ public class JokerSlotView extends JPanel {
         return name.length() > 13 ? name.substring(0, 12) + "…" : name;
     }
 
-    // Played during the scoring sequence when this joker fires: a gold glow
-    // ring plus a quick scale bounce, timed with the activation sound.
     public void pulseActivate() {
         if (empty) {
             return;
@@ -85,29 +82,39 @@ public class JokerSlotView extends JPanel {
         }
 
         RoundRectangle2D shape = new RoundRectangle2D.Float(2, 2, getWidth() - 4, getHeight() - 4, ARC, ARC);
+
         if (empty) {
-            g2.setColor(Theme.PANEL);
+            // Empty dashed slot
+            g2.setColor(Theme.PANEL_BG);
             g2.fill(shape);
             g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0,
                     new float[]{5, 4}, 0));
             g2.setColor(Theme.PANEL_BORDER);
             g2.draw(shape);
         } else {
-            Theme.paintVerticalPanelGradient(g2, shape, Theme.PANEL_LIGHT, Theme.PANEL);
-            g2.setColor(glowAlpha > 0f ? Theme.GOLD : Theme.PANEL_BORDER);
-            g2.setStroke(new BasicStroke(glowAlpha > 0f ? 3f : 1f));
-            g2.draw(shape);
+            // Outer golden glow when activating during score
             if (glowAlpha > 0f) {
-                g2.setColor(new java.awt.Color(244, 197, 66, Math.round(120 * glowAlpha)));
-                RoundRectangle2D outerGlow = new RoundRectangle2D.Float(-3, -3, getWidth() + 2, getHeight() + 2,
-                        ARC + 3, ARC + 3);
-                g2.fill(outerGlow);
+                g2.setColor(new Color(215, 170, 35, Math.round(130 * glowAlpha)));
+                RoundRectangle2D outerGlow = new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), ARC + 2, ARC + 2);
+                g2.setStroke(new BasicStroke(4f));
+                g2.draw(outerGlow);
             }
+
+            // Fill slot background directly
+            g2.setColor(Theme.PANEL_BG);
+            g2.fill(shape);
+
+            // Subtle top highlight line for bevel effect
+            g2.setColor(new Color(255, 255, 255, 22));
+            g2.drawLine(5, 3, getWidth() - 6, 3);
+
+            // Slot border
+            g2.setColor(glowAlpha > 0f ? Theme.GOLD : Theme.PANEL_BORDER);
+            g2.setStroke(new BasicStroke(glowAlpha > 0f ? 2.5f : 1.5f));
+            g2.draw(shape);
         }
+
         g2.dispose();
         super.paintComponent(g);
-    }
-    private void SAVE(){
-        System.out.println("HI");
     }
 }

@@ -31,7 +31,7 @@ public class ShopPanel extends BackdropPanel {
         setBorder(new EmptyBorder(30, 50, 30, 50));
 
         JLabel title = new JLabel("SHOP", SwingConstants.CENTER);
-        title.setFont(Theme.TITLE_FONT);
+        title.setFont(Theme.FONT_HEADER);
         title.setForeground(Theme.GOLD);
         add(title, BorderLayout.NORTH);
 
@@ -87,7 +87,7 @@ public class ShopPanel extends BackdropPanel {
             textStack.add(name);
 
             JLabel desc = new JLabel("<html><center>" + joker.getDescription() + "</center></html>", SwingConstants.CENTER);
-            desc.setFont(Theme.TITLE_FONT);
+            desc.setFont(Theme.SMALL_FONT);
             desc.setForeground(Theme.TEXT);
             desc.setAlignmentX(CENTER_ALIGNMENT);
             textStack.add(javax.swing.Box.createVerticalStrut(6));
@@ -115,7 +115,7 @@ public class ShopPanel extends BackdropPanel {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             RoundRectangle2D shape = new RoundRectangle2D.Float(2, 2, getWidth() - 4, getHeight() - 4, 18, 18);
-            Theme.paintVerticalPanelGradient(g2, shape, Theme.PANEL_LIGHT, Theme.PANEL);
+            Theme.paintVerticalPanelGradient(g2, shape, Theme.PANEL_LIGHT, Theme.PANEL_BG);
             g2.setStroke(new BasicStroke(1.5f));
             g2.setColor(Theme.PANEL_BORDER);
             g2.draw(shape);

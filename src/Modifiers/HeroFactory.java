@@ -22,7 +22,7 @@ public class HeroFactory {
                     return mult + (faceCount * 5);
                 }));
 
-        heroes.add(new Hero("Big A", "The Pointer",
+        heroes.add(new Hero("Big A", "Pointer",
                 "+150 Mult on any Straight or Flush (or better)",
                 (mult, hand, type) -> {
                     switch (type) {

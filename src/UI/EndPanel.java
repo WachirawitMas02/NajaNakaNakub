@@ -18,7 +18,7 @@ public class EndPanel extends BackdropPanel {
         setLayout(new BorderLayout(0, 20));
         setBorder(new EmptyBorder(70, 60, 70, 60));
 
-        titleLabel.setFont(Theme.TITLE_FONT);
+        titleLabel.setFont(Theme.FONT_HEADER);
         add(titleLabel, BorderLayout.NORTH);
 
         statsLabel.setFont(Theme.HEADER_FONT);

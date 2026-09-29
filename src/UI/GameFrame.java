@@ -39,9 +39,9 @@ public class GameFrame extends JFrame {
         setupFullscreen();
         setupExitHotkey();
 
-        // 1. Build persistent screens
-        titlePanel = new TitlePanel(this);
-        menuPanel = (MenuPanel) buildMenu();
+        // 1. Build persistent screens (Pass callback to go to Hero Select)
+        titlePanel = new TitlePanel(this::showHeroSelect);
+        menuPanel = buildMenu();
 
         root.add(titlePanel, TITLE);
         root.add(menuPanel, MENU);
@@ -50,6 +50,7 @@ public class GameFrame extends JFrame {
 
         // Start on Title Screen
         showTitleScreen();
+        setVisible(true);
     }
 
     private void setupFullscreen() {
@@ -71,7 +72,7 @@ public class GameFrame extends JFrame {
         });
     }
 
-    private JPanel buildMenu() {
+    private MenuPanel buildMenu() {
         return new MenuPanel(hero -> {
             state = new GameState();
             state.startNewRun(hero);
@@ -117,8 +118,8 @@ public class GameFrame extends JFrame {
     private void restart() {
         // Drop the old run's screens and return to title
         root.removeAll();
-        titlePanel = new TitlePanel(this);
-        menuPanel = (MenuPanel) buildMenu();
+        titlePanel = new TitlePanel(this::showHeroSelect);
+        menuPanel = buildMenu();
 
         root.add(titlePanel, TITLE);
         root.add(menuPanel, MENU);
