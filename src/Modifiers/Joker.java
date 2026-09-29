@@ -14,16 +14,14 @@ public class Joker implements Modifier {
     private final double bonusMult;
     private final double xMult;
     private final int price;
+    private String imgpath;
     // If non-null, this joker's bonuses only trigger when the played hand
     // matches this poker hand type (e.g. a "Flush Joker" only fires on flushes).
     private final PokerHandType requiredType;
 
-    public Joker(String name, String description, int bonusChips, double bonusMult, double xMult, int price) {
-        this(name, description, bonusChips, bonusMult, xMult, price, null);
-    }
-
+    // 1. Full constructor (8 parameters)
     public Joker(String name, String description, int bonusChips, double bonusMult, double xMult, int price,
-            PokerHandType requiredType) {
+                 String imgpath,PokerHandType requiredType) {
         this.name = name;
         this.description = description;
         this.bonusChips = bonusChips;
@@ -31,11 +29,25 @@ public class Joker implements Modifier {
         this.xMult = xMult;
         this.price = price;
         this.requiredType = requiredType;
+        this.imgpath = imgpath;
+    }
+
+    // 2. Constructor WITH image, WITHOUT required hand type (7 parameters)
+    public Joker(String name, String description, int bonusChips, double bonusMult, double xMult, int price, String imgpath) {
+        this(name, description, bonusChips, bonusMult, xMult, price, imgpath,null);
+    }
+
+    // 3. Fallback constructor with neither (6 parameters)
+    public Joker(String name, String description, int bonusChips, double bonusMult, double xMult, int price) {
+        this(name, description, bonusChips, bonusMult, xMult, price, null, null);
     }
 
     @Override
     public String getName() {
         return name;
+    }
+    public String getimgpath(){
+        return imgpath;
     }
 
     @Override
