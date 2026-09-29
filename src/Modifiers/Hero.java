@@ -22,12 +22,14 @@ public class Hero implements Modifier {
     private final String title;
     private final String description;
     private final HeroEffect effect;
+    private final String IMGpath;
 
     public Hero(String name, String title, String description, HeroEffect effect) {
         this.name = name;
         this.title = title;
         this.description = description;
         this.effect = effect;
+        this.IMGpath = "/assets/heroes/" + name.toLowerCase().replace(" ", "_")+ ".png";
     }
 
     @Override

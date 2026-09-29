@@ -9,11 +9,11 @@ public class HeroFactory {
     public static List<Hero> createChoices() {
         List<Hero> heroes = new ArrayList<>();
 
-        heroes.add(new Hero("Nigga", "just pass nig",
+        heroes.add(new Hero("Nerd", "ERMMM",
                 "+100 Mult whenever the played hand contains an Ace",
                 (mult, hand, type) -> hand.containsRank(14) ? mult + 100 : mult));
 
-        heroes.add(new Hero("Kub", "Face Collector",
+        heroes.add(new Hero("Orangutan", "World eater",
                 "+5 Mult for every face card (J/Q/K) in the played hand",
                 (mult, hand, type) -> {
                     long faceCount = hand.getSelectedCards().stream()
@@ -22,7 +22,7 @@ public class HeroFactory {
                     return mult + (faceCount * 5);
                 }));
 
-        heroes.add(new Hero("big sans", "Steady Hand",
+        heroes.add(new Hero("Big A", "The Pointer",
                 "+150 Mult on any Straight or Flush (or better)",
                 (mult, hand, type) -> {
                     switch (type) {
@@ -38,7 +38,7 @@ public class HeroFactory {
                     }
                 }));
 
-        heroes.add(new Hero("Mekhala", "Small Blessing",
+        heroes.add(new Hero("RATT", "AH MUCK",
                 "+2 Mult for every card in the played hand",
                 (mult, hand, type) -> mult + (hand.getSelectedCards().size() * 2)));
 
