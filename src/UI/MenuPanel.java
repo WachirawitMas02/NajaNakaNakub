@@ -71,6 +71,10 @@ public class MenuPanel extends BackdropPanel {
     private void cycle(int direction) {
         if (heroes == null || heroes.isEmpty()) return;
         currentIndex = (currentIndex + direction + heroes.size()) % heroes.size();
+
+        // Play card flip sound:
+        Audio.SoundManager.playClick();
+
         updateDisplay();
     }
 

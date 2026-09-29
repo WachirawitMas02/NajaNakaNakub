@@ -178,15 +178,12 @@ public class ShopPanel extends BackdropPanel {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                    // Drop shadow
                     g2.setColor(new Color(0, 0, 0, 110));
                     g2.fillRoundRect(3, 5, getWidth() - 6, getHeight() - 8, 12, 12);
 
-                    // Placard dark slate backing
                     g2.setColor(new Color(24, 30, 40, 235));
                     g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
 
-                    // Red/Gold Balatro accent frame
                     g2.setColor(new Color(45, 54, 72));
                     g2.setStroke(new BasicStroke(1.5f));
                     g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
@@ -214,7 +211,7 @@ public class ShopPanel extends BackdropPanel {
             descLbl.setForeground(new Color(215, 222, 235));
             descLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            // Buy Button / Price Pill
+            // Buy Button
             StyledButton buyBtn = new StyledButton("$" + joker.getPrice(), Theme.GOLD);
             buyBtn.setPreferredSize(new Dimension(110, 36));
             buyBtn.setMaximumSize(new Dimension(120, 36));
@@ -226,9 +223,23 @@ public class ShopPanel extends BackdropPanel {
             boolean hasSlot = state.getJokers().size() < GameState.JOKER_SLOTS;
             buyBtn.setEnabled(canAfford && hasSlot);
 
+            // -------------------------------------------------------------
+            // PURCHASING ACTION WITH SOUND & UI SYNC
+            // -------------------------------------------------------------
             buyBtn.addActionListener(e -> {
+                if (state.getMoney() < joker.getPrice() || state.getJokers().size() >= GameState.JOKER_SLOTS) {
+                    Audio.SoundManager.playFail();
+                    return;
+                }
+
                 if (state.buyJoker(joker)) {
+                    // 1. Play purchase cash chime
+                    Audio.SoundManager.playSuccess();
+
+                    // 2. Update Top Cash indicator
                     moneyBadge.setValueQuiet("$" + state.getMoney());
+
+                    // 3. Re-render offers (remaining cards update affordability)
                     renderOffers();
                 }
             });

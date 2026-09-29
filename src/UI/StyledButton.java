@@ -11,6 +11,7 @@ public class StyledButton extends JButton {
     private boolean isPressed = false;
     private Color baseColor = Theme.MULT_RED;
     private static final int ARC = 6; // Crisp corner edge
+    
 
     public StyledButton(String text) {
         super(text);
@@ -30,6 +31,9 @@ public class StyledButton extends JButton {
         setFocusPainted(false);
         setBorderPainted(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        addActionListener(e -> {
+            Audio.SoundManager.playClick();
+        });
 
         addMouseListener(new MouseAdapter() {
             @Override public void mouseEntered(MouseEvent e) { isHovered = true; repaint(); }
