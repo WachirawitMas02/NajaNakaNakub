@@ -2,19 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/najanakanakub/NajaNakaNakub.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/GameModel/Card.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/GameModel/Deck.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/GameModel/Hand.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/Modifiers/Modifier.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/Modifiers/Hero.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/Modifiers/Joker.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/UI/JokerIconView.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/UI/JokerSlotView.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/UI/Sequencer.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/UI/ShopPanel.java</file>
-            <file>file:/D:/NetBeansProjects/NajaNakaNakub/src/UI/StyledButton.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

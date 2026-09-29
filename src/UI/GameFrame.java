@@ -14,9 +14,10 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 // Top-level window. Owns the single GameState for the current run and
-// switches between menu / play / shop / end screens via CardLayout.
+// switches between title / menu / play / shop / end screens via CardLayout.
 public class GameFrame extends JFrame {
 
+    private static final String TITLE = "title";
     private static final String MENU = "menu";
     private static final String PLAY = "play";
     private static final String SHOP = "shop";
@@ -29,6 +30,8 @@ public class GameFrame extends JFrame {
     private PlayPanel playPanel;
     private ShopPanel shopPanel;
     private EndPanel endPanel;
+    private TitlePanel titlePanel;
+    private MenuPanel menuPanel;
 
     public GameFrame() {
         super("Naja Naka Nakub");
@@ -36,8 +39,17 @@ public class GameFrame extends JFrame {
         setupFullscreen();
         setupExitHotkey();
 
-        root.add(buildMenu(), MENU);
+        // 1. Build persistent screens
+        titlePanel = new TitlePanel(this);
+        menuPanel = (MenuPanel) buildMenu();
+
+        root.add(titlePanel, TITLE);
+        root.add(menuPanel, MENU);
+
         add(root);
+
+        // Start on Title Screen
+        showTitleScreen();
     }
 
     private void setupFullscreen() {
@@ -76,6 +88,16 @@ public class GameFrame extends JFrame {
         });
     }
 
+    // --- Navigation Methods ---
+
+    public void showTitleScreen() {
+        cardLayout.show(root, TITLE);
+    }
+
+    public void showHeroSelect() {
+        cardLayout.show(root, MENU);
+    }
+
     private void goToShop() {
         shopPanel.refresh();
         cardLayout.show(root, SHOP);
@@ -93,16 +115,19 @@ public class GameFrame extends JFrame {
     }
 
     private void restart() {
-        // Drop the old run's screens so a fresh hero pick builds a clean state.
+        // Drop the old run's screens and return to title
         root.removeAll();
-        root.add(buildMenu(), MENU);
-        cardLayout.show(root, MENU);
+        titlePanel = new TitlePanel(this);
+        menuPanel = (MenuPanel) buildMenu();
+
+        root.add(titlePanel, TITLE);
+        root.add(menuPanel, MENU);
+
+        cardLayout.show(root, TITLE);
         root.revalidate();
         root.repaint();
     }
 
-    // Called when a blind is cleared: pays out reward + interest and checks
-    // for the final-boss win condition before deciding shop vs. victory screen.
     private void goToShopOrVictory() {
         boolean victoryReached = state.collectReward();
         if (victoryReached) {
