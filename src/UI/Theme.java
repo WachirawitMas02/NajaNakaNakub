@@ -12,16 +12,28 @@ import java.awt.Shape;
 // accents, plus small paint helpers used across the custom-drawn components.
 public final class Theme {
     private Theme() {}
+    public static final Color BG_DARK = new Color(20, 24, 30);
+    public static final Color FELT_GREEN = new Color(26, 47, 35);
+    public static final Color PANEL_BG = new Color(34, 39, 52);
+    public static final Color PANEL_BORDER = new Color(55, 65, 85);
+
+    // Scoring & Chips (Neon Blue & Red)
+    public static final Color CHIP_BLUE = new Color(0, 150, 255);
+    public static final Color MULT_RED = new Color(254, 62, 59);
+    public static final Color GOLD = new Color(255, 204, 0);
+    public static final Color DISCARD_ORANGE = new Color(225, 90, 40);
+
+    // Fonts
+    public static final Font FONT_HEADER = new Font("Impact", Font.PLAIN, 28);
+    public static final Font FONT_SCORE = new Font("Impact", Font.PLAIN, 36);
+    public static final Font FONT_LABEL = new Font("SansSerif", Font.BOLD, 14);
+    public static final Font FONT_BADGE = new Font("Impact", Font.PLAIN, 24);
 
     public static final Color BG_TOP = new Color(0x1A1330);
     public static final Color BG_BOTTOM = new Color(0x2B1E4A);
     public static final Color PANEL = new Color(0x2A2350);
     public static final Color PANEL_LIGHT = new Color(0x3B3270);
-    public static final Color PANEL_BORDER = new Color(0x5A4A9A);
-    public static final Color GOLD = new Color(0xF4C542);
     public static final Color GOLD_DIM = new Color(0xC79A2E);
-    public static final Color CHIP_BLUE = new Color(0x4FA3F7);
-    public static final Color MULT_RED = new Color(0xE94F4F);
     public static final Color TEXT = new Color(0xF2F0FA);
     public static final Color TEXT_DIM = new Color(0xA79FC7);
     public static final Color SUIT_RED = new Color(0xD7263D);

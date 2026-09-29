@@ -1,435 +1,304 @@
 package UI;
 
-import Audio.SoundManager;
 import Engine.GameState;
-import Engine.ScoreEvent;
 import Engine.ScoreResult;
 import GameModel.Card;
 import GameModel.PokerHandType;
-import Modifiers.Joker;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
+import javax.swing.*;
 
-// The main gameplay screen: blind/score header, joker slots, a live score
-// calculator, the player's hand of cards, and the play/discard/sort controls.
-public class PlayPanel extends BackdropPanel {
-
-    private static final int SCORE_STEP_DELAY_MS = 320;
-
+public class PlayPanel extends JPanel {
     private final GameState state;
-    private final Runnable onRoundWon;
-    private final Runnable onGameLost;
+    private final Runnable onBlindCleared;
+    private final Runnable onGameOver;
 
-    private final Map<Card, CardView> cardViews = new LinkedHashMap<>();
-    private final Map<Joker, JokerSlotView> jokerSlotViews = new LinkedHashMap<>();
+    // Sub-panels
+    private JPanel leftDashboard;
+    private JPanel topJokerRail;
+    private JPanel centerCardArea;
+    private JPanel bottomControlDock;
 
-    private final JLabel blindLabel = new JLabel();
-    private final JLabel targetLabel = new JLabel();
-    private final JLabel scoreLabel = new JLabel();
-    private final JLabel handsLabel = new JLabel();
-    private final JLabel discardsLabel = new JLabel();
-    private final JLabel moneyLabel = new JLabel();
-    private final JLabel lastPlayLabel = new JLabel(" ");
+    // Dynamic UI Labels
+    private JLabel targetScoreLabel;
+    private JLabel currentScoreLabel;
+    private JLabel handsLeftBadge;
+    private JLabel discardsLeftBadge;
+    private JLabel moneyLabel;
+    private JLabel anteLabel;
+    private JLabel pokerHandPreviewLabel;
 
-    private final JLabel handTypeLabel = new JLabel("Select cards");
-    private final BadgeLabel chipsBadge = new BadgeLabel("0", Theme.CHIP_BLUE, java.awt.Color.WHITE,
-            Theme.HEADER_FONT.deriveFont(18f));
-    private final BadgeLabel multBadge = new BadgeLabel("x0", Theme.MULT_RED, java.awt.Color.WHITE,
-            Theme.HEADER_FONT.deriveFont(18f));
-    private final JLabel totalLabel = new JLabel("0");
+    private final List<CardView> activeCardViews = new ArrayList<>();
 
-    private final JPanel jokerRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 4));
-    private final JPanel handRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 10));
-    private final StyledButton sortRankButton = new StyledButton("Sort by Rank");
-    private final StyledButton sortSuitButton = new StyledButton("Sort by Suit");
-    private final StyledButton playButton = new StyledButton("Play Hand");
-    private final StyledButton discardButton = new StyledButton("Discard");
-
-    // Running chip/mult values as the scoring animation reveals them, so each
-    // step can animate a count-up from the previous step's result.
-    private int displayedChips;
-    private double displayedMult;
-
-    public PlayPanel(GameState state, Runnable onRoundWon, Runnable onGameLost) {
+    public PlayPanel(GameState state, Runnable onBlindCleared, Runnable onGameOver) {
         this.state = state;
-        this.onRoundWon = onRoundWon;
-        this.onGameLost = onGameLost;
+        this.onBlindCleared = onBlindCleared;
+        this.onGameOver = onGameOver;
 
-        setLayout(new BorderLayout(0, 10));
-        setBorder(new EmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout(15, 15));
+        setBackground(Theme.BG_DARK);
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildCenter(), BorderLayout.CENTER);
-        add(buildControls(), BorderLayout.SOUTH);
+        buildLeftDashboard();
+        buildTopJokerRail();
+        buildCenterCardArea();
+        buildBottomDock();
 
         refresh();
     }
 
-    private JPanel buildHeader() {
-        JPanel header = new JPanel(new GridLayout(1, 6, 10, 0));
-        header.setOpaque(false);
-        for (JLabel label : new JLabel[]{blindLabel, targetLabel, scoreLabel, handsLabel, discardsLabel, moneyLabel}) {
-            label.setFont(Theme.HEADER_FONT);
-            label.setForeground(Theme.TEXT);
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-            header.add(label);
-        }
-        scoreLabel.setForeground(Theme.GOLD);
-        moneyLabel.setForeground(Theme.GOLD);
-        return header;
-    }
-
-    private JPanel buildCenter() {
-        JPanel center = new JPanel();
-        center.setOpaque(false);
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-
-        jokerRow.setOpaque(false);
-        jokerRow.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Theme.PANEL_BORDER), "Jokers"));
-        ((javax.swing.border.TitledBorder) jokerRow.getBorder()).setTitleColor(Theme.TEXT_DIM);
-        jokerRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel calculator = buildCalculator();
-        calculator.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        lastPlayLabel.setFont(Theme.BODY_FONT);
-        lastPlayLabel.setForeground(Theme.TEXT_DIM);
-        lastPlayLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        handRow.setOpaque(false);
-        handRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        center.add(jokerRow);
-        center.add(javax.swing.Box.createVerticalStrut(8));
-        center.add(calculator);
-        center.add(lastPlayLabel);
-        center.add(javax.swing.Box.createVerticalGlue());
-        center.add(handRow);
-        return center;
-    }
-
-    private JPanel buildCalculator() {
-        JPanel calc = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));
-        calc.setOpaque(false);
-
-        handTypeLabel.setFont(Theme.HEADER_FONT);
-        handTypeLabel.setForeground(Theme.TEXT);
-
-        totalLabel.setFont(Theme.SCORE_FONT);
-        totalLabel.setForeground(Theme.GOLD);
-
-        JLabel times = new JLabel("x");
-        times.setFont(Theme.SCORE_FONT.deriveFont(20f));
-        times.setForeground(Theme.TEXT_DIM);
-
-        JLabel equals = new JLabel("=");
-        equals.setFont(Theme.SCORE_FONT.deriveFont(20f));
-        equals.setForeground(Theme.TEXT_DIM);
-
-        calc.add(handTypeLabel);
-        calc.add(chipsBadge);
-        calc.add(times);
-        calc.add(multBadge);
-        calc.add(equals);
-        calc.add(totalLabel);
-        return calc;
-    }
-
-    private JPanel buildControls() {
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 8));
-        controls.setOpaque(false);
-
-        sortRankButton.addActionListener(e -> {
-            state.getHand().getCards().sort(Comparator.comparingInt(Card::getRankValue));
-            refresh();
-        });
-
-        sortSuitButton.addActionListener(e -> {
-            state.getHand().getCards().sort(Comparator.comparing(Card::getSuit)
-                    .thenComparingInt(Card::getRankValue));
-            refresh();
-        });
-
-        discardButton.addActionListener(e -> {
-            if (!discardButton.isEnabled()) {
-                return;
+    // 1. LEFT DASHBOARD (Score requirement, current score, Hands & Discards)
+    private void buildLeftDashboard() {
+        leftDashboard = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(Theme.PANEL_BG);
+                g2d.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 22, 22));
+                g2d.setColor(Theme.PANEL_BORDER);
+                g2d.setStroke(new BasicStroke(3f));
+                g2d.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 22, 22));
+                g2d.dispose();
             }
-            setControlsEnabled(false);
-            List<Card> toDiscard = new ArrayList<>(state.getHand().getSelectedCards());
-            animateExitFor(toDiscard, () -> {
-                state.discardSelected();
-                lastPlayLabel.setText(" ");
-                refresh();
-            });
-        });
+        };
+        leftDashboard.setPreferredSize(new Dimension(280, 0));
+        leftDashboard.setLayout(new BoxLayout(leftDashboard, BoxLayout.Y_AXIS));
+        leftDashboard.setOpaque(false);
+        leftDashboard.setBorder(BorderFactory.createEmptyBorder(20, 16, 20, 16));
 
-        playButton.addActionListener(e -> {
-            if (!playButton.isEnabled()) {
-                return;
+        // Ante & Money
+        JPanel metaRow = new JPanel(new GridLayout(1, 2, 8, 0));
+        metaRow.setOpaque(false);
+        anteLabel = createStatPill("ANTE 1/8", new Color(150, 80, 220));
+        moneyLabel = createStatPill("$4", Theme.GOLD);
+        metaRow.add(anteLabel);
+        metaRow.add(moneyLabel);
+        leftDashboard.add(metaRow);
+        leftDashboard.add(Box.createVerticalStrut(25));
+
+        // Target Requirement Box
+        JLabel goalTitle = new JLabel("SCORE AT LEAST", SwingConstants.CENTER);
+        goalTitle.setFont(Theme.FONT_LABEL);
+        goalTitle.setForeground(new Color(200, 200, 200));
+        goalTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftDashboard.add(goalTitle);
+
+        targetScoreLabel = new JLabel("300", SwingConstants.CENTER);
+        targetScoreLabel.setFont(Theme.FONT_SCORE);
+        targetScoreLabel.setForeground(Theme.MULT_RED);
+        targetScoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftDashboard.add(targetScoreLabel);
+        leftDashboard.add(Box.createVerticalStrut(20));
+
+        // Current Score Box
+        JLabel currentTitle = new JLabel("ROUND SCORE", SwingConstants.CENTER);
+        currentTitle.setFont(Theme.FONT_LABEL);
+        currentTitle.setForeground(new Color(200, 200, 200));
+        currentTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftDashboard.add(currentTitle);
+
+        currentScoreLabel = new JLabel("0", SwingConstants.CENTER);
+        currentScoreLabel.setFont(Theme.FONT_SCORE);
+        currentScoreLabel.setForeground(Theme.CHIP_BLUE);
+        currentScoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftDashboard.add(currentScoreLabel);
+        leftDashboard.add(Box.createVerticalGlue());
+
+        // Hands & Discards Badges
+        JPanel badgeRow = new JPanel(new GridLayout(1, 2, 12, 0));
+        badgeRow.setOpaque(false);
+
+        handsLeftBadge = createBadge("HANDS", "4", Theme.CHIP_BLUE);
+        discardsLeftBadge = createBadge("DISCARDS", "3", Theme.DISCARD_ORANGE);
+
+        badgeRow.add(handsLeftBadge);
+        badgeRow.add(discardsLeftBadge);
+        leftDashboard.add(badgeRow);
+
+        add(leftDashboard, BorderLayout.WEST);
+    }
+
+    // 2. TOP JOKER RAIL
+    private void buildTopJokerRail() {
+        topJokerRail = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setColor(new Color(28, 32, 42));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+                g2d.dispose();
             }
-            setControlsEnabled(false);
-            startScoringSequence();
-        });
-
-        controls.add(sortRankButton);
-        controls.add(sortSuitButton);
-        controls.add(discardButton);
-        controls.add(playButton);
-        return controls;
+        };
+        topJokerRail.setPreferredSize(new Dimension(0, 130));
+        topJokerRail.setOpaque(false);
+        add(topJokerRail, BorderLayout.NORTH);
     }
 
-    private void setControlsEnabled(boolean enabled) {
-        sortRankButton.setEnabled(enabled);
-        sortSuitButton.setEnabled(enabled);
-        playButton.setEnabled(enabled && !state.getHand().getSelectedCards().isEmpty()
-                && state.getHandsRemaining() > 0);
-        discardButton.setEnabled(enabled && !state.getHand().getSelectedCards().isEmpty()
-                && state.getDiscardsRemaining() > 0);
-    }
+    // 3. CENTER CASINO TABLE (Poker Hand title & cards)
+    private void buildCenterCardArea() {
+        JPanel centerContainer = new JPanel(new BorderLayout());
+        centerContainer.setOpaque(false);
 
-    // Captures the ScoreEvent timeline up front (the actual scoring + hand
-    // mutation already happened), then replays it one step at a time -
-    // base hand value, each scoring card ticking in, each Joker/Hero firing,
-    // then the final combine - before the played cards visually leave and
-    // the next hand deals in.
-    private void startScoringSequence() {
-        List<Card> playedCards = new ArrayList<>(state.getHand().getSelectedCards());
-        ScoreResult result = state.playSelected();
-        if (result == null) {
-            setControlsEnabled(true);
-            return;
-        }
+        // Preview Label
+        pokerHandPreviewLabel = new JLabel("SELECT CARDS", SwingConstants.CENTER);
+        pokerHandPreviewLabel.setFont(new Font("Impact", Font.PLAIN, 24));
+        pokerHandPreviewLabel.setForeground(Theme.GOLD);
+        pokerHandPreviewLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        centerContainer.add(pokerHandPreviewLabel, BorderLayout.NORTH);
 
-        lastPlayLabel.setText(" ");
-        displayedChips = 0;
-        displayedMult = 0;
-
-        List<Runnable> steps = new ArrayList<>();
-        for (ScoreEvent event : result.getEvents()) {
-            steps.add(() -> applyScoreEvent(event));
-        }
-        Sequencer.run(steps, SCORE_STEP_DELAY_MS, () -> finishPlay(result, playedCards));
-    }
-
-    private void applyScoreEvent(ScoreEvent event) {
-        int fromChips = displayedChips;
-        double fromMult = displayedMult;
-
-        switch (event.getType()) {
-            case BASE:
-                handTypeLabel.setText(event.getLabel());
-                break;
-            case CARD: {
-                CardView cv = cardViews.get(event.getCard());
-                int added = event.getChips() - fromChips;
-                if (cv != null) {
-                    cv.pulseScore("+" + added);
-                }
-                SoundManager.playCardTick();
-                break;
+        // Green Felt Arena
+        centerCardArea = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 35)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(Theme.FELT_GREEN);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                g2d.setColor(new Color(45, 80, 60));
+                g2d.setStroke(new BasicStroke(4f));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+                g2d.dispose();
             }
-            case HERO:
-                SoundManager.playJokerActivate();
-                break;
-            case JOKER: {
-                JokerSlotView slot = jokerSlotViews.get(event.getJoker());
-                if (slot != null) {
-                    slot.pulseActivate();
-                }
-                SoundManager.playJokerActivate();
-                break;
-            }
-            case COMBINE: {
-                SoundManager.playCombineHit();
-                int finalScore = (int) Math.round(event.getChips() * event.getMult());
-                totalLabel.setText(String.valueOf(finalScore));
-                punch(totalLabel, Theme.SCORE_FONT);
-                break;
-            }
-            default:
-                break;
-        }
+        };
+        centerCardArea.setOpaque(false);
+        centerContainer.add(centerCardArea, BorderLayout.CENTER);
 
-        animateChipsBadge(fromChips, event.getChips());
-        animateMultBadge(fromMult, event.getMult());
-        displayedChips = event.getChips();
-        displayedMult = event.getMult();
+        add(centerContainer, BorderLayout.CENTER);
     }
 
-    private void animateChipsBadge(int from, int to) {
-        if (from == to) {
-            chipsBadge.setValueQuiet(String.valueOf(to));
-            return;
-        }
-        Animator.animate(220, t -> chipsBadge.setValueQuiet(String.valueOf(Math.round(from + (to - from) * t))),
-                chipsBadge::pulse);
+    // 4. BOTTOM DOCK (Action Buttons)
+    private void buildBottomDock() {
+        bottomControlDock = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 10));
+        bottomControlDock.setOpaque(false);
+
+        StyledButton discardBtn = new StyledButton("DISCARD", Theme.DISCARD_ORANGE);
+        discardBtn.setPreferredSize(new Dimension(170, 54));
+        discardBtn.addActionListener(e -> handleDiscard());
+
+        StyledButton playHandBtn = new StyledButton("PLAY HAND", Theme.MULT_RED);
+        playHandBtn.setPreferredSize(new Dimension(200, 54));
+        playHandBtn.addActionListener(e -> handlePlayHand());
+
+        bottomControlDock.add(discardBtn);
+        bottomControlDock.add(playHandBtn);
+        add(bottomControlDock, BorderLayout.SOUTH);
     }
 
-    private void animateMultBadge(double from, double to) {
-        if (from == to) {
-            multBadge.setValueQuiet("x" + trim(to));
-            return;
-        }
-        Animator.animate(220, t -> multBadge.setValueQuiet("x" + trim(from + (to - from) * t)),
-                multBadge::pulse);
-    }
-
-    // Brief font-size punch used for the final total reveal.
-    private void punch(JLabel label, Font baseFont) {
-        Animator.animate(240, t -> {
-            float scale = 1f + 0.35f * (1f - t);
-            label.setFont(baseFont.deriveFont(baseFont.getSize2D() * scale));
-        }, () -> label.setFont(baseFont));
-    }
-
-    private void finishPlay(ScoreResult result, List<Card> playedCards) {
-        lastPlayLabel.setText(result.getHandType().getDisplayName() + "  ->  "
-                + result.getFinalChips() + " chips x " + trim(result.getFinalMult())
-                + " mult = " + result.getFinalScore() + " pts");
-
-        animateExitFor(playedCards, () -> {
-            if (state.isRoundWon()) {
-                SoundManager.playSuccess();
-                refresh();
-                onRoundWon.run();
-            } else if (state.isGameOver()) {
-                refresh();
-                onGameLost.run();
-            } else {
-                refresh();
-            }
-        });
-    }
-
-    // Animates the given cards' CardViews popping/fading out, then runs
-    // onAllDone once every one finishes (or immediately if none are shown).
-    private void animateExitFor(List<Card> cards, Runnable onAllDone) {
-        List<CardView> exiting = cards.stream()
-                .map(cardViews::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (exiting.isEmpty()) {
-            onAllDone.run();
-            return;
-        }
-        AtomicInteger remaining = new AtomicInteger(exiting.size());
-        for (CardView view : exiting) {
-            view.animateExit(() -> {
-                if (remaining.decrementAndGet() == 0) {
-                    onAllDone.run();
-                }
-            });
-        }
-    }
-
-    private static String trim(double value) {
-        if (value == Math.rint(value)) {
-            return String.valueOf((long) value);
-        }
-        // Mid count-up-animation values are almost never exact integers -
-        // cap at 1 decimal instead of printing full double precision.
-        return String.format("%.1f", value);
-    }
-
-    // Full rebuild: hand row is redealt with a staggered entrance animation.
-    // Used whenever the set of cards in hand actually changes (new blind,
-    // after playing, after discarding, after sorting).
     public void refresh() {
-        rebuildJokerSlots();
-        rebuildHandRow();
-        refreshStats();
-    }
+        if (state == null) return;
 
-    private void rebuildJokerSlots() {
-        jokerRow.removeAll();
-        jokerSlotViews.clear();
-        List<Joker> jokers = state.getJokers();
-        for (int i = 0; i < GameState.JOKER_SLOTS; i++) {
-            Joker joker = i < jokers.size() ? jokers.get(i) : null;
-            JokerSlotView slot = new JokerSlotView(joker);
-            if (joker != null) {
-                jokerSlotViews.put(joker, slot);
-            }
-            jokerRow.add(slot);
-        }
-        jokerRow.revalidate();
-        jokerRow.repaint();
-    }
-
-    private void rebuildHandRow() {
-        handRow.removeAll();
-        cardViews.clear();
-
-        Consumer<Card> onCardClick = this::handleCardClick;
-        int index = 0;
-        for (Card card : state.getHand().getCards()) {
-            CardView view = new CardView(card, onCardClick);
-            view.setSelectedImmediate(state.getHand().getSelectedCards().contains(card));
-            cardViews.put(card, view);
-            handRow.add(view);
-            view.playDealAnimation(index * 55);
-            index++;
-        }
-        handRow.revalidate();
-        handRow.repaint();
-    }
-
-    private void handleCardClick(Card card) {
-        state.selectCard(card);
-        CardView view = cardViews.get(card);
-        if (view != null) {
-            view.setSelected(state.getHand().getSelectedCards().contains(card));
-        }
-        refreshStats();
-    }
-
-    // Lightweight update: header numbers, live score preview, and button
-    // enabled state. Never rebuilds the hand row, so selecting a card stays
-    // smooth instead of re-triggering the deal animation.
-    private void refreshStats() {
-        blindLabel.setText(state.getCurrentBlind().getLabel() + " (Ante " + state.getAnte() + ")");
-        targetLabel.setText("Target: " + state.getBlindRequirement());
-        scoreLabel.setText("Score: " + state.getRoundScore());
-        handsLabel.setText("Hands: " + state.getHandsRemaining());
-        discardsLabel.setText("Discards: " + state.getDiscardsRemaining());
+        targetScoreLabel.setText(String.valueOf(state.getBlindRequirement()));
+        currentScoreLabel.setText(String.valueOf(state.getRoundScore()));
+        anteLabel.setText("ANTE " + state.getAnte() + "/" + GameState.MAX_ANTE);
         moneyLabel.setText("$" + state.getMoney());
+        handsLeftBadge.setText("<html><center>HANDS<br><b>" + state.getHandsRemaining() + "</b></center></html>");
+        discardsLeftBadge.setText("<html><center>DISCARDS<br><b>" + state.getDiscardsRemaining() + "</b></center></html>");
 
-        // Deliberately just the hand type's base chips/mult here - card
-        // values and Joker/Hero bonuses only reveal in the animated
-        // sequence once the player actually presses Play Hand.
-        PokerHandType previewType = state.previewHandType();
-        if (previewType == null) {
-            handTypeLabel.setText("Select cards");
-            chipsBadge.setValue("0");
-            multBadge.setValue("x0");
-            totalLabel.setText("0");
-        } else {
-            handTypeLabel.setText(previewType.getDisplayName());
-            chipsBadge.setValue(String.valueOf(previewType.getBaseChips()));
-            multBadge.setValue("x" + trim(previewType.getBaseMult()));
-            totalLabel.setText(String.valueOf(previewType.getBaseChips() * previewType.getBaseMult()));
+        renderHandCards();
+        renderJokers();
+        updateSelectedHandPreview();
+
+        revalidate();
+        repaint();
+    }
+
+    private void renderHandCards() {
+        centerCardArea.removeAll();
+        activeCardViews.clear();
+
+        for (Card card : state.getHand().getCards()) {
+            // ส่ง Lambda แบบ Consumer<Card> เพื่อไม่ให้เกิด error
+            CardView cv = new CardView(card, c -> {
+                boolean isNowSelected = state.selectCard(c);
+                // ค้นหา CardView ที่ถูกคลิกแล้วสั่งให้การ์ดยกตัวขึ้น/ลง พร้อมอัปเดตการแสดงผล
+                for (CardView view : activeCardViews) {
+                    if (view.getCard().equals(c)) {
+                        view.setSelected(isNowSelected);
+                        break;
+                    }
+                }
+                updateSelectedHandPreview();
+            });
+
+            // ตรวจสอบว่าถ้าการ์ดใบนี้ถูกเลือกอยู่แล้ว ให้ยกตัวค้างไว้
+            if (state.getHand().getSelectedCards().contains(card)) {
+                cv.setSelectedImmediate(true);
+            }
+
+            activeCardViews.add(cv);
+            centerCardArea.add(cv);
         }
+    }
 
-        setControlsEnabled(true);
+    private void renderJokers() {
+        topJokerRail.removeAll();
+        int activeJokers = state.getJokers().size();
+        int jokerBadgeSize = 80; // กำหนดขนาด size ของ Joker icon
+
+        for (int i = 0; i < GameState.JOKER_SLOTS; i++) {
+            if (i < activeJokers) {
+                // ส่งทั้ง joker และ size เข้าไปตาม constructor
+                topJokerRail.add(new JokerIconView(state.getJokers().get(i), jokerBadgeSize));
+            } else {
+                JPanel emptySlot = new JPanel();
+                emptySlot.setPreferredSize(new Dimension(jokerBadgeSize, jokerBadgeSize));
+                emptySlot.setOpaque(false);
+                emptySlot.setBorder(BorderFactory.createDashedBorder(new Color(60, 70, 90), 3f, 5f, 3f, true));
+                topJokerRail.add(emptySlot);
+            }
+        }
+    }
+
+    private void updateSelectedHandPreview() {
+        PokerHandType handType = state.previewHandType();
+        if (handType == null) {
+            pokerHandPreviewLabel.setText("SELECT UP TO 5 CARDS");
+        } else {
+            pokerHandPreviewLabel.setText(handType.getDisplayName().toUpperCase());
+        }
+    }
+
+    private void handlePlayHand() {
+        ScoreResult result = state.playSelected();
+        if (result == null) return;
+
+        refresh();
+
+        if (state.isRoundWon()) {
+            onBlindCleared.run();
+        } else if (state.isGameOver()) {
+            onGameOver.run();
+        }
+    }
+
+    private void handleDiscard() {
+        boolean discarded = state.discardSelected();
+        if (discarded) {
+            refresh();
+        }
+    }
+
+    // Helpers
+    private JLabel createStatPill(String text, Color fg) {
+        JLabel l = new JLabel(text, SwingConstants.CENTER);
+        l.setFont(Theme.FONT_BADGE);
+        l.setForeground(fg);
+        l.setBackground(new Color(20, 24, 30));
+        l.setOpaque(true);
+        l.setBorder(BorderFactory.createLineBorder(fg.darker(), 2));
+        return l;
+    }
+
+    private JLabel createBadge(String title, String val, Color color) {
+        JLabel b = new JLabel("<html><center>" + title + "<br><b>" + val + "</b></center></html>", SwingConstants.CENTER);
+        b.setFont(new Font("Impact", Font.PLAIN, 18));
+        b.setForeground(Color.WHITE);
+        b.setBackground(color);
+        b.setOpaque(true);
+        b.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+        return b;
     }
 }
