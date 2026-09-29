@@ -107,4 +107,7 @@ public class JokerSlotView extends JPanel {
         g2.dispose();
         super.paintComponent(g);
     }
+    private void SAVE(){
+        System.out.println("HI");
+    }
 }

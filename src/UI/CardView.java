@@ -254,4 +254,7 @@ public class CardView extends JPanel {
 
         g2.dispose();
     }
+    private void SAVE(){
+        System.out.println("HI");
+    }
 }
