@@ -34,7 +34,4 @@ public class Deck {
         }
         return null; // Deck is empty
     }
-    private void SAVE(){
-        System.out.println("HI");
-    }
 }

@@ -65,7 +65,4 @@ public class Card {
     public int hashCode() {
         return java.util.Objects.hash(suit != null ? suit.toLowerCase() : "", rankValue);
     }
-    private void SAVE(){
-        System.out.println("HI");
-    }
 }

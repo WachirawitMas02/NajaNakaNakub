@@ -67,7 +67,4 @@ public class Hand {
     public int getCardCount() {
         return cards.size();
     }
-    private void SAVE(){
-        System.out.println("HI");
-    }
 }
