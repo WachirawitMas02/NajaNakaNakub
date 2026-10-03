@@ -17,7 +17,7 @@ public class JokerFactory {
         pool.add(new Joker("Golden Ticket", "x1.5 Mult", 0, 0, 1.5, 6,"/Assets/Jokers/Jokerplaceholder.png"));
         pool.add(new Joker("Steel Plate", "+50 Chips", 50, 0, 1.0, 5,"/Assets/Jokers/Jokerplaceholder.png"));
         pool.add(new Joker("Big Mult", "x2 Mult", 0, 0, 2.0, 8,"/Assets/Jokers/Jokerplaceholder.png"));
-        pool.add(new Joker("99", "x99 Bonus&Multi", 99, 9.9, 9.9, 9,"/Assets/Jokers/Jokerplaceholder.png"));
+        pool.add(new Joker("99", "x99 Bonus&Multi", 99, 9.9, 9.9, 9,"/Assets/Jokers/nai99.png"));
 
 
         // Hand-type conditional bonuses
