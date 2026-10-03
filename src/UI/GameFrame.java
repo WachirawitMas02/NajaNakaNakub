@@ -54,11 +54,19 @@ public class GameFrame extends JFrame {
     }
 
     private void setupFullscreen() {
-        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        DisplayMode mode = device.getDisplayMode();
-        setUndecorated(true);
-        setResizable(false);
-        setBounds(0, 0, mode.getWidth(), mode.getHeight());
+         if (!isDisplayable()) {
+            setUndecorated(true);
+            setResizable(false);
+        }
+
+        GraphicsDevice device = getGraphicsConfiguration().getDevice();
+
+        if (device.isFullScreenSupported()) {
+            device.setFullScreenWindow(this);
+        } else {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+            setVisible(true);
+        }
     }
 
     private void setupExitHotkey() {
