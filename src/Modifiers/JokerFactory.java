@@ -13,7 +13,7 @@ public class JokerFactory {
         // Flat, always-on bonuses
         pool.add(new Joker("Joker", "+4 Mult", 0, 4, 1.0, 3,"/Assets/Jokers/Jokerplaceholder.png"));
         pool.add(new Joker("Chip Stack", "+30 Chips", 30, 0, 1.0, 4,"/Assets/Jokers/badman.png"));
-        pool.add(new Joker("Greedy Multiplier", "+8 Mult", 0, 8, 1.0, 6,"/Assets/Jokers/Jokerplaceholder.png"));
+        pool.add(new Joker("Greedy Multiplier", "+8 Mult", 0, 8, 1.0, 6,"/Assets/Jokers/doalonja.png"));
         pool.add(new Joker("Golden Ticket", "x1.5 Mult", 0, 0, 1.5, 6,"/Assets/Jokers/bakambe.png"));
         pool.add(new Joker("Steel Plate", "+50 Chips", 50, 0, 1.0, 5,"/Assets/Jokers/fools.png"));
         pool.add(new Joker("Big Mult", "x2 Mult", 0, 0, 2.0, 8,"/Assets/Jokers/jaian.png"));
