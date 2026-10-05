@@ -19,6 +19,11 @@ public class JokerFactory {
         pool.add(new Joker("Big Mult", "x2 Mult", 0, 0, 2.0, 8,"/Assets/Jokers/jaian.png"));
         pool.add(new Joker("99", "x99 Bonus&Multi", 99, 9.9, 9.9, 9,"/Assets/Jokers/nai99.png"));
         pool.add(new Joker("J POT", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/CJEK.png"));
+        
+        pool.add(new Joker("Jerry", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/jerry.png"));
+        pool.add(new Joker("Tom", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/tom.png"));
+        pool.add(new Joker("Go Jo", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/gojo.png"));
+        pool.add(new Joker("ShinChan", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/shinchan.png"));
 
 
         // Hand-type conditional bonuses
