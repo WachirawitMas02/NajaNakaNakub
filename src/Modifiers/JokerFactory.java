@@ -38,6 +38,8 @@ public class JokerFactory {
                 PokerHandType.FOUR_OF_A_KIND));
         pool.add(new Joker("Royalty", "x4 Mult on Straight/Royal Flush", 0, 0, 4.0, 10,"/Assets/Jokers/justoo.png",
                 PokerHandType.STRAIGHT_FLUSH));
+        pool.add(new Joker("B...BIG S!!", "x10 Mult on Straight/Royal Flush", 0, 0, 10.0, 55,"/Assets/Jokers/BIGS.png",
+                PokerHandType.STRAIGHT_FLUSH));
 
         return pool;
     }
