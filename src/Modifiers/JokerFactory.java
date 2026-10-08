@@ -21,7 +21,6 @@ public class JokerFactory {
         pool.add(new Joker("J POT", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/CJEK.png"));
         
         pool.add(new Joker("Jerry", "+36 Chip&Multi", 36, 36, 1.0, 36,"/Assets/Jokers/jerry.png"));
-        pool.add(new Joker("Tom", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/tom.png"));
         pool.add(new Joker("Go Jo", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/gojo.png"));
         pool.add(new Joker("ShinChan", "+888 Chip&Multi", 888, 888, 8.8, 88,"/Assets/Jokers/shinchan.png"));
 
