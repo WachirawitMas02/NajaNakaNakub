@@ -35,6 +35,8 @@ public class JokerFactory {
                 PokerHandType.THREE_OF_A_KIND));
         pool.add(new Joker("Straight Shooter", "+40 Chips on a Straight", 40, 0, 1.0, 5,"/Assets/Jokers/Jokerplaceholder.png",
                 PokerHandType.STRAIGHT));
+         pool.add(new Joker("Tom", "+15 Chip& +5 Multi", 15, 5, 1.0, 18,"/Assets/Jokers/tom.png",
+                PokerHandType.STRAIGHT));
         pool.add(new Joker("Flush Fanatic", "x2 Mult on a Flush", 0, 0, 2.0, 6,"/Assets/Jokers/Jokerplaceholder.png",
                 PokerHandType.FLUSH));
         pool.add(new Joker("Full House Feast", "+50 Chips on a Full House", 50, 0, 1.0, 6,"/Assets/Jokers/Jokerplaceholder.png",
