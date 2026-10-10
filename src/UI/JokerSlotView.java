@@ -37,7 +37,7 @@ public class JokerSlotView extends JPanel {
 
         setToolTipText("<html><b>" + joker.getName() + "</b><br>" + joker.getDescription() + "</html>");
 
-        JokerIconView icon = new JokerIconView(joker, 44);
+        JokerIconView icon = new JokerIconView(joker, 100);
         JPanel iconWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 6));
         iconWrap.setOpaque(false);
         iconWrap.add(icon);
