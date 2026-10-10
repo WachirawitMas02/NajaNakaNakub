@@ -30,16 +30,36 @@ public class JokerIconView extends JPanel {
     }
 
     private static BufferedImage loadCustomArt(Joker joker) {
-        String slug = slugify(joker.getName());
-        String path = "/Assets/jokers/" + slug + ".png";
-        try (InputStream in = JokerIconView.class.getResourceAsStream(path)) {
+        String path = joker.getimgpath();
+        if (path == null || path.trim().isEmpty()) {
+            return null;
+        }
+        try {
+
+            InputStream in = JokerIconView.class.getResourceAsStream(path);
             if (in != null) {
                 return ImageIO.read(in);
+            } else {
+
+                java.io.File file = new java.io.File(path.startsWith("/") ? path.substring(1) : path);
+                if (file.exists()) {
+                    return ImageIO.read(file);
+                }
             }
         } catch (IOException ignored) {
-            // Fall back to the drawn badge below.
+
         }
         return null;
+        // String slug = slugify(joker.getName());
+        // String path = "/Assets/jokers/" + slug + ".png";
+        // try (InputStream in = JokerIconView.class.getResourceAsStream(path)) {
+        //     if (in != null) {
+        //         return ImageIO.read(in);
+        //     }
+        // } catch (IOException ignored) {
+        //     // Fall back to the drawn badge below.
+        // }
+        // return null;
     }
 
     private static String slugify(String name) {
