@@ -36,9 +36,9 @@ public class JokerFactory {
                 PokerHandType.STRAIGHT));
          pool.add(new Joker("Tom", "+15 Chip& +5 Multi", 15, 5, 1.0, 18,"/Assets/Jokers/tom.png",
                 PokerHandType.STRAIGHT));
-        pool.add(new Joker("Flush Fanatic", "x2 Mult on a Flush", 0, 0, 2.0, 6,"/Assets/Jokers/Jokerplaceholder.png",
+        pool.add(new Joker("Flush Fanatic", "x2 Mult on a Flush", 0, 0, 2.0, 6,"/Assets/Jokers/kirbuu.png",
                 PokerHandType.FLUSH));
-        pool.add(new Joker("Full House Feast", "+50 Chips on a Full House", 50, 0, 1.0, 6,"/Assets/Jokers/Jokerplaceholder.png",
+        pool.add(new Joker("Full House Feast", "+50 Chips on a Full House", 50, 0, 1.0, 6,"/Assets/Jokers/shreku.png",
                 PokerHandType.FULL_HOUSE));
          pool.add(new Joker("P O P", "+100 Chips on a Full House", 100, 0, 1.0, 10,"/Assets/Jokers/Popcat.png",
                 PokerHandType.FULL_HOUSE));
